@@ -1,4 +1,4 @@
-# Our app — AI-Powered Parametric Income Insurance for Food Delivery Workers
+# AI-Powered Parametric Income Insurance for Food Delivery Workers
 
 > DEVTrails 2026 | Team: Segmentation Fault | Persona: Food Delivery
 
@@ -15,13 +15,13 @@
 
 ## 1. Problem Statement
 
-India's food delivery ecosystem runs on an estimated 5–7 million gig workers employed by platforms like Zomato and Swiggy. These workers are classified as independent contractors — they have no employment protections, no sick leave, and critically, **no income safety net when external conditions prevent them from working**.
+India's food delivery ecosystem runs on an estimated 5–7 million gig workers employed by platforms like Zomato and Swiggy. These workers are classified as independent contractors i.e. they have no employment protections, no sick leave, and critically, **no income safety net when external conditions prevent them from working**.
 
-A single afternoon of heavy rain, a high-AQI smog event, or a local curfew can eliminate 100% of a worker's daily earnings — events entirely outside their control. Studies suggest gig workers lose **20–30% of monthly income** to such disruptions annually.
+A single afternoon of heavy rain, a high-AQI smog event, or a local curfew can eliminate 100% of a worker's daily earnings which is entirely outside their control. Studies suggest gig workers lose **20–30% of monthly income** to such disruptions annually.
 
 **No existing insurance product in India** is designed for the weekly earning cycle of a gig worker, nor does any product provide automatic, zero-claim payouts tied to real-world disruption data.
 
-Our solution solves this by building a **parametric income insurance platform** — one that monitors external disruption events and automatically initiates payouts to affected workers when a pre-agreed threshold is crossed. No claim form. No waiting. No paperwork.
+Our solution solves this by building a **parametric income insurance platform** — one that monitors external disruption events and automatically initiates payouts to affected workers when a pre-agreed threshold is crossed. No claim form. No paperwork.
 
 ---
 
@@ -45,7 +45,7 @@ Our solution solves this by building a **parametric income insurance platform** 
 
 ### Scenario B — High AQI/Pollution
 
-> Person B delivers for Zomato. A severe smog event pushes AQI to hazardous levels in her zone. The app's event monitor detects the threshold breach, identifies active policies in the zone, runs the anti-spoofing and fraud scoring pipeline, and records approved payout entitlements. B receives a notification in her preferred language: "Your zone is under pollution disruption. Rs. X has been added to your weekly payout — credited this Sunday."
+> Person B delivers for Zomato. A severe smog event pushes AQI to hazardous levels in her zone. The app's event monitor detects the threshold breach, identifies active policies in the zone, runs the anti-spoofing and fraud scoring pipeline, and records approved payout entitlements. B receives a notification: "Your zone is under pollution disruption. Rs. X has been added to your weekly payout — credited this Sunday."
 
 
 ### Scenario C — Local Curfew / Strike
@@ -54,7 +54,7 @@ Our solution solves this by building a **parametric income insurance platform** 
 
 ### Scenario D — Fraud Attempt
 
-> Worker attempts to claim for a weather event in Zone A but the anti-spoofing engine detects inconsistencies: GPS trace shows he was in Zone B, accelerometer data shows no movement consistent with riding in rain, device battery drain is atypically low for outdoor operation, and his claim velocity is anomalous relative to his zone cohort. The claim is automatically blocked, queued for human adjuster review, and the worker receives a transparent notification explaining the flag — not a punitive block.
+> Worker attempts to claim for a weather event in Zone A but the anti-spoofing engine detects inconsistencies: GPS trace shows he was in Zone B, accelerometer data shows no movement consistent with riding in rain, device battery drain is atypically low for outdoor operation, and his claim velocity is anomalous relative to his zone cohort. The claim is automatically blocked, queued for human adjuster review, and the worker receives a transparent notification explaining the flag.
 
 ---
 
@@ -373,7 +373,7 @@ Score vs Action based decision
 
 ---
 
-###Scale & Optimise
+### Scale & Optimise
 
 **Milestone 1**
 - Isolation Forest: generate fraud-labelled training data → train → FastAPI `/ml/fraud-score` live
@@ -412,7 +412,7 @@ Score vs Action based decision
 ### Future Extensibility
 
 - Live weather APIs (OpenWeatherMap, IMD MAUSAM, Tomorrow.io) can replace the synthetic engine with a configuration flag
-- Platform API integration via real Swiggy/Zo6mato partner webhooks
+- Platform API integration via real Swiggy/Zomato partner webhooks
 - BGC parameter tracking, glider, and buoy data integration for coastal delivery zones
 
 
