@@ -16,6 +16,7 @@ app.add_middleware(
 )
 
 # --- 1. INITIALIZE FIREBASE ---
+db = None
 try:
     cred = credentials.Certificate("serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
