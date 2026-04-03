@@ -1,4 +1,3 @@
-# modified version from initial commit
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,7 +48,7 @@ class WorkerProfile(BaseModel):
 class ClaimSubmission(BaseModel):
     worker_id: str
     event_id: str
-    gps_match: bool  # Rule-based hard check
+    gps_match: bool
     time_delay_mins: float
     gps_match_score: float
     recent_claims: int
@@ -70,57 +69,58 @@ async def calculate_premium(worker: WorkerProfile):
 
 @app.post("/claim/evaluate")
 async def evaluate_claim(claim: ClaimSubmission):
-    # STEP 1: Rule-Based Hard Checks (Fast Rejection)
     if not claim.gps_match:
-        status = "REJECTED"
-        reason = "GPS mismatch. Worker not in disruption zone."
-        fraud_score = 1.0
+        status, reason, fraud_score = "REJECTED", "GPS mismatch.", 1.0
     elif claim.recent_claims > 5:
-        status = "REJECTED"
-        reason = "Too many claims in the last 30 days."
-        fraud_score = 1.0
+        status, reason, fraud_score = "REJECTED", "Excessive recent claims.", 1.0
     else:
-        # STEP 2: Autoencoder Anomaly Detection
-        # Normalize inputs for the network
         features = np.array([[
-            claim.time_delay_mins / 120,
-            claim.gps_match_score,
-            claim.recent_claims / 10,
-            claim.app_activity,
-            claim.account_age_days / 365
+            claim.time_delay_mins / 120, claim.gps_match_score,
+            claim.recent_claims / 10, claim.app_activity, claim.account_age_days / 365
         ]])
-        
-        # Predict (Reconstruct) and calculate Mean Squared Error
         reconstruction = fraud_autoencoder.predict(features, verbose=0)
         mse = np.mean(np.power(features - reconstruction, 2))
-        
-        # Scale the error into a risk score (0 to 1)
         fraud_score = min(mse * 10, 1.0) 
 
-        # Decision Thresholds
         if fraud_score > 0.6:
-            status = "FLAGGED"
-            reason = "High anomaly score. Manual review required."
+            status, reason = "FLAGGED", "Anomaly detected. Manual review."
         else:
-            status = "APPROVED"
-            reason = "Passed AI validation."
+            status, reason = "APPROVED", "Passed AI validation."
 
-    # Save claim outcome to Firebase
     if db:
-        claim_data = {
-            "worker_id": claim.worker_id,
-            "event_id": claim.event_id,
-            "status": status,
-            "reason": reason,
-            "fraud_score": float(fraud_score),
+        db.collection("claims").add({
+            "worker_id": claim.worker_id, "event_id": claim.event_id,
+            "status": status, "reason": reason, "fraud_score": float(fraud_score),
             "timestamp": datetime.datetime.now()
-        }
-        db.collection("claims").add(claim_data)
+        })
+    return {"status": status, "fraud_score": round(fraud_score, 3), "reason": reason}
+
+# --- NEW: DEMO TRIGGER ---
+@app.post("/simulate-disruption")
+async def simulate_disruption():
+    # 1. Simulate a weather API triggering a rainstorm
+    event_id = f"RAIN-{int(datetime.datetime.now().timestamp())}"
+
+    # 2. Automatically generate a claim for our test worker
+    # We make the stats look "normal" so it passes the Autoencoder
+    test_claim = ClaimSubmission(
+        worker_id="WKR-9982",
+        event_id=event_id,
+        gps_match=True,
+        time_delay_mins=10.0,
+        gps_match_score=0.98,
+        recent_claims=0,
+        app_activity=0.9,
+        account_age_days=200
+    )
+
+    # 3. Run it through the Fraud AI
+    ai_result = await evaluate_claim(test_claim)
 
     return {
-        "status": status, 
-        "fraud_score": round(fraud_score, 3), 
-        "reason": reason
+        "event_detected": "Severe Monsoon Rain",
+        "payout_amount": 450, 
+        "ai_evaluation": ai_result
     }
 
 def monitor_triggers():
