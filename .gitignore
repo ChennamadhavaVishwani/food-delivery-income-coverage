@@ -4,6 +4,7 @@ gigshield-backend/serviceAccountKey.json
 *serviceAccount*.json
 .env
 .env.*
+backend/.env
 
 __pycache__/
 *.pyc

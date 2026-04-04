@@ -55,12 +55,35 @@ export default function App() {
     setLoading(true);
     try {
       const workerProfile = {
-        worker_id: "WKR-9982", flood_risk: 0.8, heat_risk: 0.2, aqi_risk: 0.5,
-        weekly_earnings: 4500, active_days: 6, forecast_risk: 0.7, city_tier: 1.0, season_index: 1.0
+        worker_id: "WKR-9982", zone_id: "Z-CHENNAI-01", flood_risk: 0.8, heat_risk: 0.2, aqi_risk: 0.5,
+        weekly_earnings: 4500, active_days: 6, city_tier: 1.0, season_index: 1.0
       };
       const response = await axios.post(`${getBackendUrl()}/premium/calculate`, workerProfile);
-      setPremium(response.data.weekly_premium);
-      setPolicyActive(true);
+      const calculatedPremium = response.data.weekly_premium;
+      setPremium(calculatedPremium);
+      
+      // Hook up simulated Razorpay Payment flow
+      if (Platform.OS === 'web') {
+         if(window.confirm(`AI Quote Generated: ₹${calculatedPremium}/wk.\n\nProceed to Razorpay Checkout Sandbox?`)) {
+             setPolicyActive(true);
+         }
+      } else {
+        Alert.alert(
+          "AI Quote Generated 🤖",
+          `Your dynamically calculated premium is ₹${calculatedPremium}/week.\n\nTap 'Pay' to simulate the Razorpay Sandbox checkout link.`,
+          [
+            { text: "Cancel", style: "cancel" },
+            { 
+              text: "Pay with Razorpay", 
+              onPress: () => {
+                // Simulating web-browser redirect and payment success webhook
+                Alert.alert("Payment Success", "Razorpay Mock Transaction successful.\nPolicy Activated!");
+                setPolicyActive(true);
+              } 
+            }
+          ]
+        );
+      }
     } catch (err) {
       console.log(err.message);
       Alert.alert("API Error", "Could not connect to Python backend at " + getBackendUrl());
