@@ -47,9 +47,9 @@ export default function HomeScreen({
           <View style={styles.riskBadge}>
             <Text style={styles.riskBadgeText}>Rain Risk: HIGH</Text>
           </View>
-          <TouchableOpacity onPress={() => setInboxVisible(true)} style={{marginLeft: 15}}>
-             <View style={styles.bellBadge} />
-             <Ionicons name="notifications-outline" size={24} color={Colors.textPrimary} />
+          <TouchableOpacity onPress={() => setInboxVisible(true)} style={{ marginLeft: 15 }}>
+            <View style={styles.bellBadge} />
+            <Ionicons name="notifications-outline" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -65,18 +65,18 @@ export default function HomeScreen({
         <View style={styles.actionCard}>
           <Text style={styles.infoText}>You are currently unprotected against weather disruptions.</Text>
           <TouchableOpacity style={styles.primaryBtn} onPress={onGenerateQuote} disabled={loading}>
-            {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.btnText}>ACTIVATE GIGSHIELD</Text>}
+            {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.btnText}>ACTIVATE</Text>}
           </TouchableOpacity>
         </View>
       ) : !claimData ? (
         <View style={styles.actionCard}>
           <Text style={styles.successText}>● Shield Active (₹{premium}/wk)</Text>
-          
+
           <TouchableOpacity style={styles.simulateBtn} onPress={onTriggerEvent} disabled={simulating}>
             {simulating ? <ActivityIndicator color={Colors.background} /> : (
               <View style={styles.row}>
-                 <Ionicons name="cloud-download-outline" size={20} color={Colors.textPrimary} style={{marginRight: 8}} />
-                 <Text style={styles.btnText}>Simulate Heavy Rain</Text>
+                <Ionicons name="cloud-download-outline" size={20} color={Colors.textPrimary} style={{ marginRight: 8 }} />
+                <Text style={styles.btnText}>Simulate Heavy Rain</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -86,12 +86,12 @@ export default function HomeScreen({
           {/* Smart Notification Strip */}
           <View style={styles.smartNotification}>
             <Ionicons name="warning" size={20} color={Colors.neonRed} />
-            <View style={{flex: 1, marginLeft: 10}}>
+            <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={styles.smartTitle}>Heavy rain detected in your zone</Text>
               <Text style={styles.smartSub}>You're covered automatically</Text>
             </View>
             <TouchableOpacity onPress={() => setPredictionVisible(true)}>
-               <Text style={{color: Colors.neonBlue, fontWeight: 'bold'}}>View</Text>
+              <Text style={{ color: Colors.neonBlue, fontWeight: 'bold' }}>View</Text>
             </TouchableOpacity>
           </View>
 
@@ -105,8 +105,8 @@ export default function HomeScreen({
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActionsGrid}>
         {['Earnings History', 'Policy Details', 'File Live Claim', 'Support'].map(action => (
-          <TouchableOpacity 
-            key={action} 
+          <TouchableOpacity
+            key={action}
             style={styles.pillBtn}
             onPress={() => {
               if (action === 'File Live Claim') {
@@ -116,15 +116,15 @@ export default function HomeScreen({
                   Alert.alert("No Active Policy", "Please activate GigShield before filing a claim.");
                 }
               } else if (action === 'Policy Details') {
-                 setPolicyVisible(true);
+                setPolicyVisible(true);
               } else if (action === 'Support') {
-                 setSupportVisible(true);
+                setSupportVisible(true);
               } else if (action === 'Earnings History') {
-                 setEarningsVisible(true);
+                setEarningsVisible(true);
               }
             }}
           >
-             <Text style={styles.pillText}>{action}</Text>
+            <Text style={styles.pillText}>{action}</Text>
           </TouchableOpacity>
         ))}
       </View>
