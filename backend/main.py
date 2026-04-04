@@ -92,6 +92,12 @@ class ClaimSubmission(BaseModel):
     app_activity: float
     account_age_days: int
 
+class LocationUpdate(BaseModel):
+    worker_id: str
+    lat: float
+    lng: float
+    zone_id: str
+
 # --- 3. ENDPOINTS ---
 
 @app.post("/premium/calculate")
@@ -174,6 +180,39 @@ async def simulate_disruption():
         "event_detected": "Severe Monsoon Rain",
         "payout_amount": 450, 
         "ai_evaluation": ai_result
+    }
+
+@app.post("/location/update")
+async def update_location(loc: LocationUpdate):
+    if db:
+        db.collection("worker_locations").add({
+            "worker_id": loc.worker_id,
+            "lat": loc.lat,
+            "lng": loc.lng,
+            "zone_id": loc.zone_id,
+            "timestamp": datetime.datetime.now()
+        })
+    return {"status": "success", "msg": "Location synced"}
+
+@app.get("/admin/dashboard")
+async def get_admin_dashboard():
+    if not db:
+        return {"error": "Firebase not connected"}
+    claims = []
+    for doc in db.collection("claims").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(20).stream():
+        c = doc.to_dict()
+        c["id"] = doc.id
+        claims.append(c)
+        
+    locations = []
+    for doc in db.collection("worker_locations").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(50).stream():
+        l = doc.to_dict()
+        locations.append(l)
+    
+    return {
+        "active_disruptions": ZONES,
+        "recent_claims": claims,
+        "worker_locations": locations
     }
 
 def _auto_trigger_claims_sync(zone_id: str, event_type: str):

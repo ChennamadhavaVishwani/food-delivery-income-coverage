@@ -48,6 +48,23 @@ export default function App() {
         return;
       }
       setLocationStatus('Active');
+      
+      // Start background tracking simulation loop
+      const sendLocation = async () => {
+         const location = await Location.getCurrentPositionAsync({});
+         try {
+           await axios.post(`${getBackendUrl()}/location/update`, {
+             worker_id: "WKR-9982",
+             lat: location.coords.latitude,
+             lng: location.coords.longitude,
+             zone_id: "Z-CHENNAI-01"
+           });
+         } catch(e) {}
+      };
+      
+      sendLocation();
+      const interval = setInterval(sendLocation, 30000); // 30 sec for demo
+      return () => clearInterval(interval);
     })();
   }, []);
 

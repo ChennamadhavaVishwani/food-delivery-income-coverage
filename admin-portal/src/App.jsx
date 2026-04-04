@@ -1,76 +1,145 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import './index.css';
 
-function AdminPortal() {
-  const [claims, setClaims] = useState([
-    { id: 'CLM-1001', worker: 'Rajesh K.', zone: 'Bangalore', fraudScore: 12, status: 'Approved' }
-  ]);
+function App() {
+  const [data, setData] = useState({
+    active_disruptions: [],
+    recent_claims: [],
+    worker_locations: []
+  });
+  const [error, setError] = useState(null);
 
-  const triggerEvent = async (type) => {
-    try {
-      const response = await fetch('http://localhost:5000/api/admin/trigger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zone_id: 'Bangalore', type: type })
-      });
-
-      const data = await response.json();
-      if (data.claim) {
-        setClaims(prev => [
-          ...prev,
-          {
-            id: data.claim.id,
-            worker: 'Demo Worker',
-            zone: data.claim.zone_id,
-            fraudScore: data.claim.fraud_score,
-            status: data.claim.status
-          }
-        ]);
-        alert(`${type} event triggered! Claim processed.`);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/admin/dashboard');
+        if (!response.ok) throw new Error("Network response was not ok");
+        const result = await response.json();
+        
+        if (result.error) {
+           setError(result.error);
+        } else {
+           setData(result);
+           setError(null);
+        }
+      } catch (err) {
+        console.log("Fetch error:", err);
       }
-    } catch (err) {
-      alert("Error connecting to backend API on port 5000.");
-    }
-  };
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
-        <h1>Operations Dashboard</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => triggerEvent('Rain')} style={btnStyle('#007bff')}>Trigger Synthetic Rain</button>
-          <button onClick={() => triggerEvent('AQI')} style={btnStyle('#6c757d')}>Trigger AQI Smog</button>
+    <div className="dashboard">
+      <header className="header">
+        <h1>🛡️ GigShield Insurer Command Center</h1>
+        <div className="live-indicator">
+          <div className="pulse"></div>
+          {error ? "SYSTEM OFFLINE" : "LIVE LINK ACTIVE"}
         </div>
       </header>
+      
+      {error && (
+         <div className="card" style={{borderColor: 'var(--neon-red)', marginBottom: '30px'}}>
+            <h2 style={{color: 'var(--neon-red)'}}>Backend Disconnected</h2>
+            <p>Make sure your FastAPI server is running on port 8000. Firebase Status: {error}</p>
+         </div>
+      )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-        <div style={statCard}><h3>Active Policies</h3><p style={bigText}>1,240</p></div>
-        <div style={statCard}><h3>Weekly Payouts</h3><p style={bigText}>₹45,300</p></div>
-        <div style={statCard}><h3>Avg Fraud Score</h3><p style={bigText}>14.2</p></div>
+      <div className="grid">
+        {/* Left Column */}
+        <div style={{display: 'flex', flexDirection: 'column', gap: '30px'}}>
+          <div className="card">
+             <h2>Active Disruption Zones</h2>
+             <div className="zone-list">
+               {data.active_disruptions.length === 0 && <p className="zone-stats">No zones tracked.</p>}
+               {data.active_disruptions.map(zone => (
+                 <div key={zone.id} className={`zone-item ${mockRisk(zone.id) > 10 ? 'alert' : ''}`}>
+                    <div>
+                      <div className="zone-name">{zone.city} ({zone.id})</div>
+                      <div className="zone-stats">Lat: {zone.lat} | Lng: {zone.lon}</div>
+                    </div>
+                    <div style={{fontWeight: 'bold', color: mockRisk(zone.id) > 10 ? 'var(--neon-red)' : 'var(--neon-blue)'}}>
+                      {mockRisk(zone.id) > 10 ? 'WEATHER ALERT' : 'MONITORING'}
+                    </div>
+                 </div>
+               ))}
+             </div>
+          </div>
+
+          <div className="card">
+            <h2>Live Worker Telemetry</h2>
+            <div className="map-container">
+               <div className="radar"></div>
+               {/* Plotting points randomly for the cool visual map effect since we don't have a real map canvas */}
+               {data.worker_locations.slice(0, 10).map((loc, i) => (
+                  <div 
+                    key={i} 
+                    className="worker-dot" 
+                    title={`Worker: ${loc.worker_id}`}
+                    style={{
+                      left: `${30 + (Math.random() * 40)}%`, 
+                      top: `${30 + (Math.random() * 40)}%`
+                    }} 
+                  />
+               ))}
+               <div style={{position: 'absolute', bottom: 15, left: 20, color: 'var(--text-muted)', fontSize: 12}}>
+                  {data.worker_locations.length} workers geofenced
+               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div className="card">
+          <h2>Real-Time Claims & Fraud Analytics</h2>
+          {data.recent_claims.length === 0 ? (
+            <p style={{color: 'var(--text-muted)'}}>No claims processed yet.</p>
+          ) : (
+            <div style={{overflowX: 'auto'}}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Worker ID</th>
+                    <th>Event</th>
+                    <th>Status</th>
+                    <th>Autoencoder Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recent_claims.map((claim, idx) => (
+                    <tr key={claim.id || idx}>
+                      <td style={{fontWeight: 'bold'}}>{claim.worker_id}</td>
+                      <td style={{color: 'var(--neon-blue)'}}>{claim.event_id?.split('-')[0]}</td>
+                      <td>
+                        <span className={`badge ${claim.status?.toLowerCase()}`}>
+                          {claim.status}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`fraud-score ${claim.fraud_score > 0.6 ? 'fraud-risk-high' : 'fraud-risk-low'}`}>
+                          {claim.fraud_score?.toFixed(3)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
-
-      <table style={{ width: '100%', backgroundColor: '#fff', borderRadius: '8px', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
-            <th style={pad}>Claim ID</th><th style={pad}>Worker</th><th style={pad}>Zone</th><th style={pad}>Fraud Score</th><th style={pad}>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {claims.map(c => (
-            <tr key={c.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={pad}>{c.id}</td><td style={pad}>{c.worker}</td><td style={pad}>{c.zone}</td>
-              <td style={pad}><span style={{ color: c.fraudScore > 50 ? 'red' : 'green', fontWeight: 'bold' }}>{c.fraudScore}</span></td>
-              <td style={pad}>{c.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
 
-const btnStyle = (bg) => ({ backgroundColor: bg, color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' });
-const statCard = { backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' };
-const bigText = { fontSize: '24px', fontWeight: 'bold', margin: '10px 0 0 0' };
-const pad = { padding: '15px' };
+// Just a quick visual mock function for the UI design to have an alert state
+function mockRisk(zoneId) {
+  if(zoneId.includes("CHENNAI")) return 15; // Force alert for aesthetic demo
+  return 5;
+}
 
-export default AdminPortal;
+export default App;
